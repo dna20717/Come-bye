@@ -425,6 +425,11 @@ function herdCenter(){
 }
 function spray(x,y,n,cols){ for(let i=0;i<n;i++) fx.push({x,y,vx:(rnd()-.5)*1.2,vy:-rnd()*.9,c:pick(cols||['#d8f1f6','#9fd3e2']),life:22+rnd()*10,g:.05}); }
 function updateDog(){
+  if(dog.shake>0){ // standing still on the shore, shaking off the water
+    dog.shake--; dog.vx*=.5; dog.vy*=.5; dog.x+=dog.vx; dog.y+=dog.vy; dog.spd=0;
+    if(dog.shake%2===0) spray(dog.x+(rnd()-.5)*8,dog.y-3,3);
+    return;
+  }
   const D=dog.D, H=herdCenter();
   let near=1e9; H.list.forEach(s=>{near=Math.min(near,Math.hypot(s.x-dog.x,s.y-dog.y))});
   if(dog.delay>0 && --dog.delay===0 && dog.pending){ dog.mode=dog.pending; dog.pending=null; }
@@ -453,9 +458,8 @@ function updateDog(){
   if(Math.abs(dog.vx)>.05) dog.face=dog.vx>0?1:-1;
   dog.anim+=dog.spd*.35;
   if(wet&&!dog.wet){ splash(); spray(dog.x,dog.y-2,10); }
-  if(!wet&&dog.wet) dog.shake=36;
+  if(!wet&&dog.wet){ dog.shake=30; dog.zoom=0; brrr(1); }
   dog.wet=wet;
-  if(dog.shake>0){ dog.shake--; if(dog.shake%3===0) spray(dog.x,dog.y-3,3); }
 }
 let lastBleat=0;
 function updateSheep(){
@@ -561,7 +565,7 @@ function render(){
       ctx.drawImage(img,0,0,w,vis,x0,y-h+3+bob,w,vis);
       ctx.fillStyle='#e6f6fa'; const p=(frames>>3)%3;
       ctx.fillRect(x0-1-p,y,2,1); ctx.fillRect(x0+w-1+p,y,2,1); ctx.fillRect(x-2,y+1,4,1);
-    } else { shadow(x,y,w-3); ctx.drawImage(img,x0,y-h); }
+    } else { const j=dog.shake>0?((dog.shake>>1)%2?1:-1):0; shadow(x,y,w-3); ctx.drawImage(img,x0+j,y-h); }
   }});
   if(pupOn&&pup) ents.push({y:pup.y,draw:drawPup});
   ents.sort((a,b)=>a.y-b.y).forEach(e=>e.draw());
@@ -602,6 +606,7 @@ function pupIdle(P){
 }
 function updatePup(){
   if(!pupOn||!pup||!dog) return;
+  if(pup.shake>0){ const P=pup; P.shake--; P.vx*=.5; P.vy*=.5; P.x+=P.vx; P.y+=P.vy; P.spd=0; if(P.shake%3===0) spray(P.x+(rnd()-.5)*6,P.y-2,2); return; }
   const P=pup, dogMoving=dog.spd>.35, dd=Math.hypot(dog.x-P.x,dog.y-P.y);
   if(dogMoving||dd>40){ if(P.state!=='follow'){ P.state='follow'; } }
   else if(P.state==='follow'&&dd<16){ P.state='sit'; P.timer=40+rnd()*80; }
@@ -625,6 +630,7 @@ function updatePup(){
     collide(P,2,true);
     const wet=!SEASON.ice&&inPond(P,0);
     if(wet&&!P.wet) spray(P.x,P.y-2,5);
+    if(!wet&&P.wet){ P.shake=24; P.vx*=.3; P.vy*=.3; brrr(1.5); }
     P.wet=wet;
   } else { P.x=clamp(P.x,3,LW-3); P.y=clamp(P.y,5,LH-2); P.wet=false; }
   P.spd=Math.hypot(P.vx,P.vy);
@@ -640,7 +646,7 @@ function drawPup(){
   const img=P.face>0?fr.r:fr.l, w=fr.w, h=fr.h, e=Math.round(P.elev);
   if(P.wet){ const vis=h-2; ctx.drawImage(img,0,0,w,vis,x-(w>>1),y-h+2+((frames>>4)%2),w,vis);
     ctx.fillStyle='#e6f6fa'; ctx.fillRect(x-(w>>1)-1,y,2,1); ctx.fillRect(x+(w>>1),y,2,1); }
-  else { shadow(x,y,w-2); ctx.drawImage(img,x-(w>>1),y-h-e); }
+  else { const j=P.shake>0?((P.shake>>1)%2?1:-1):0; shadow(x,y,w-2); ctx.drawImage(img,x-(w>>1)+j,y-h-e); }
 }
 
 /* ---------- Agility ---------- */
@@ -1020,6 +1026,14 @@ function bark(){
     o.type='square'; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*.47,t+.08);
     lp.type='lowpass'; lp.frequency.value=1600; env(g,t,.005,.18,.04,.04);
     o.connect(lp).connect(g).connect(master); o.start(t); o.stop(t+.12); });
+}
+function brrr(pitch){
+  if(!audio()) return; const t=AC.currentTime+.01;
+  const n=noiseSrc(), bp=AC.createBiquadFilter(), g=AC.createGain(), am=AC.createGain(), lfo=AC.createOscillator(), lg=AC.createGain();
+  bp.type='bandpass'; bp.frequency.value=700*pitch; bp.Q.value=1.5;
+  lfo.type='square'; lfo.frequency.value=18*pitch; lg.gain.value=.5; am.gain.value=.5; lfo.connect(lg).connect(am.gain);
+  env(g,t,.03,.22,.3,.12);
+  n.connect(bp).connect(am).connect(g).connect(master); n.start(t); lfo.start(t); n.stop(t+.5); lfo.stop(t+.5);
 }
 function chime(){
   if(!audio()) return; const t=AC.currentTime+.01;
