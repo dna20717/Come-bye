@@ -15,6 +15,8 @@ Ein kleines Pixel-Spiel für Handy und Browser rund um Border Collies.
 | Juni | schwarz, etwas größer, brav | ruhige Herde, trifft die Kontaktzonen |
 | Fly | schwarz-braun, der Größte, sehr schnell, frech | macht gern sein eigenes Ding |
 
+Optional läuft **Moxy** mit, ein Junghund, der nichts macht, aber niedlich ist: hinterhertrotten, Schmetterlingen nachjagen, um den großen Hund flitzen.
+
 Dazu: vier Jahreszeiten, Zufallskarten, Collies dürfen in den Teich, und eine Schäferin, die ihre Kommandos in Fantasie-Simlish ruft. Alle Sounds entstehen live per Web Audio.
 
 ## Technik
