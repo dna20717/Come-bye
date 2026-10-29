@@ -2,7 +2,7 @@
 
 Ein kleines Pixel-Spiel für Handy und Browser rund um Border Collies.
 
-**Spielen:** https://dna20717.github.io/come-bye/
+**Spielen:** https://dna20717.github.io/Come-bye/
 
 ## Spielmodi
 - **Hüten:** Treib zehn Schafe ins Gatter. Tippen oder Ziehen lenkt deinen Collie, dazu kommen echte Hütekommandos wie *Come bye*, *Away to me*, *Walk up* und *Lie down*. Wer hetzt, stresst die Herde.
