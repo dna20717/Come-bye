@@ -6,6 +6,7 @@ Ein kleines Pixel-Spiel für Handy und Browser rund um Border Collies.
 
 ## Spielmodi
 - **Hüten:** Treib zehn Schafe ins Gatter. Tippen oder Ziehen lenkt deinen Collie, dazu kommen echte Hütekommandos wie *Come bye*, *Away to me*, *Walk up* und *Lie down*. Wer hetzt, stresst die Herde.
+- **Seitenlauf:** Agility als Sidescroller. Dein Collie läuft von selbst, *Hopp!* springt (länger halten = höher), *Langsam* bremst für Slalom und Kontaktzonen. Die Hunde sind mit Gelenken animiert, Schwanz und Ohren federn mit.
 - **Agility:** Zufällige Parcours mit Hürde, Reifen, Tunnel, Slalom, A-Wand, Steg, Wippe und Tisch. Mit *Hopp!*, *Langsam* und *Lie down* vermeidest du Fehler, jeder kostet 5 Sekunden.
 
 ## Die Collies
