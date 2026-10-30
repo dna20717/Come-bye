@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Come Bye – ein Pixel-Hütespiel mit Border Collies: Schafe hüten oder Agility-Parcours laufen.">
+<meta name="description" content="Come Bye – ein Pixel-Hütespiel mit Border Collies: Schafe hüten, Agility laufen und den Hof erkunden.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Come Bye</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -40,7 +40,7 @@ body{background:var(--sky);color:var(--ink);font-family:var(--font-pix);overflow
 .icon-btn{font:inherit;font-size:13px;background:var(--cream);color:var(--ink);border:2px solid var(--wood-dk);padding:3px 7px;cursor:pointer}
 
 .stage{flex:1;min-height:0;position:relative;display:grid;place-items:center}
-#field,#side{display:block;image-rendering:pixelated;image-rendering:crisp-edges;border:4px solid var(--wood-dk);
+#field,#side,#farm{display:block;image-rendering:pixelated;image-rendering:crisp-edges;border:4px solid var(--wood-dk);
   box-shadow:0 0 0 2px var(--wood),0 6px 0 2px #8fae7f;background:#9cc46b;cursor:crosshair;max-width:100%}
 
 .bubble{position:absolute;top:10px;left:50%;transform:translate(-50%,-6px) scale(.8);opacity:0;pointer-events:none;z-index:3;
@@ -58,6 +58,16 @@ body{background:var(--sky);color:var(--ink);font-family:var(--font-pix);overflow
 [hidden]{display:none!important}
 .pad.agi{grid-template-columns:repeat(4,1fr)}
 .cmd.reset{background:#efe4c6}
+.fpad{display:grid;grid-template-columns:116px 1fr 1.25fr;gap:8px;padding-bottom:6px}
+.dpad{height:104px;box-sizing:border-box;background:var(--cream);border:3px solid var(--wood-dk);box-shadow:0 4px 0 var(--wood-dk);display:grid;
+  grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);grid-template-areas:". u ." "l . r" ". d .";touch-action:none;cursor:pointer}
+.dp{display:grid;place-items:center;color:var(--muted);pointer-events:none}
+.dp svg{width:14px;height:14px;fill:currentColor}
+.dp.u{grid-area:u}.dp.l{grid-area:l}.dp.r{grid-area:r}.dp.d{grid-area:d}
+.dp.on{background:var(--sun);color:var(--ink)}
+.fpad .cmd{min-height:104px;box-sizing:border-box;justify-content:center}
+.fpad .cmd b{font-size:18px}
+.cmd.fjump{background:#fff3c4}
 .cmd.held{background:var(--sun);transform:translateY(3px);box-shadow:0 1px 0 var(--wood-dk)}
 .card h2{margin:0;font-size:24px;letter-spacing:.04em;text-wrap:balance}
 .card p{margin:0;font-size:14px;line-height:1.45}
@@ -117,6 +127,7 @@ button:focus-visible{outline:3px dashed var(--ink);outline-offset:2px}
   <div class="stage" id="stage">
     <canvas id="field" aria-label="Weide mit Schafen, Collie und Gatter"></canvas>
     <canvas id="side" aria-label="Agility-Seitenlauf mit Collie" hidden></canvas>
+    <canvas id="farm" aria-label="Der Hof zum Erkunden" hidden></canvas>
     <div class="bubble" id="bubble" aria-live="polite"><b id="bSim"></b><span id="bEn"></span></div>
 
     <div class="card" id="intro">
@@ -126,6 +137,7 @@ button:focus-visible{outline:3px dashed var(--ink);outline-offset:2px}
         <button class="chip" type="button" role="radio" data-mode="herd" id="m-herd">Hüten</button>
         <button class="chip" type="button" role="radio" data-mode="agility" id="m-agility">Agility</button>
         <button class="chip" type="button" role="radio" data-mode="side" id="m-side">Seitenlauf</button>
+        <button class="chip" type="button" role="radio" data-mode="farm" id="m-farm">Hof</button>
       </div>
       <div class="picks" role="radiogroup" aria-label="Collie wählen">
         <button class="pick" type="button" role="radio" data-dog="nala" id="p-nala"><canvas width="24" height="10"></canvas><b>Nala</b></button>
@@ -160,6 +172,16 @@ button:focus-visible{outline:3px dashed var(--ink);outline-offset:2px}
     </div>
   </div>
 
+  <nav class="fpad" id="padFarm" aria-label="Hof-Steuerung" hidden>
+    <div class="dpad" id="dpad" role="group" aria-label="Steuerkreuz">
+      <span class="dp u"><svg viewBox="0 0 10 10"><path d="M5 1 9 8H1z"/></svg></span>
+      <span class="dp l"><svg viewBox="0 0 10 10"><path d="M1 5 8 1v8z"/></svg></span>
+      <span class="dp r"><svg viewBox="0 0 10 10"><path d="M9 5 2 1v8z"/></svg></span>
+      <span class="dp d"><svg viewBox="0 0 10 10"><path d="M5 9 9 2H1z"/></svg></span>
+    </div>
+    <button class="cmd bark" type="button" id="f-bark"><b>Wuff!</b><span>BELLEN</span></button>
+    <button class="cmd fjump" type="button" id="f-jump"><b>Hopp!</b><span>HALTEN = HÖHER</span></button>
+  </nav>
   <nav class="pad agi" id="padSide" aria-label="Seitenlauf-Kommandos" hidden>
     <button class="cmd" type="button" id="x-jump"><b>Hopp!</b><span>HALTEN = HÖHER</span></button>
     <button class="cmd" type="button" id="x-slow"><b>Langsam</b><span>HALTEN</span></button>
@@ -385,6 +407,7 @@ function newWorld(){
   const key=seasonChoice==='random'?pick(Object.keys(SEASONS)):seasonChoice;
   SEASON=SEASONS[key];
   frames=0; fx=[]; amb=[];
+  if(MODE==='farm'){ sheep=[]; buildFarm(); resetFarm(); updateSub(); return; }
   if(MODE==='side'){ sheep=[]; genSide(); buildSideLayers(); resetSide(); updateSub(); return; }
   if(MODE==='agility'){ sheep=[]; genCourse(); buildAgiBg(); resetRun(); updateSub(); return; }
   genMap(); buildBg();
@@ -401,7 +424,7 @@ function newWorld(){
   makePup();
   setActive('down'); updateSub(); hud(0,1);
 }
-function updateSub(){ document.getElementById('sub').textContent=SEASON.label+' · '+DOGS[chosen].name+(pupOn?' & Moxy':'')+(MODE==='agility'?' · Agility':MODE==='side'?' · Seitenlauf':''); }
+function updateSub(){ document.getElementById('sub').textContent=SEASON.label+' · '+DOGS[chosen].name+(pupOn?' & Moxy':'')+(MODE==='agility'?' · Agility':MODE==='side'?' · Seitenlauf':MODE==='farm'?' · Hof':''); }
 
 /* ---------- Collision ---------- */
 function pushCircleRect(e,r,R){
@@ -536,6 +559,7 @@ function updateAmbient(){
   amb=amb.filter(p=>p.y<LH+2&&p.x<LW+4);
 }
 function step(){
+  if(MODE==='farm'){ stepFarm(); return; }
   if(MODE==='side'){ stepSide(); return; }
   if(MODE==='agility'){ stepAgi(); return; }
   if(state==='play'||state==='win'){ updateDog(); updateSheep(); }
@@ -555,6 +579,7 @@ function step(){
 /* ---------- Render ---------- */
 function shadow(x,y,w){ ctx.fillStyle=SEASON.shadow; ctx.fillRect(x-(w>>1),y,w,1); ctx.fillRect(x-(w>>1)+1,y+1,w-2,1); }
 function render(){
+  if(MODE==='farm'){ renderFarm(); return; }
   if(MODE==='side'){ renderSide(); return; }
   if(MODE==='agility'){ renderAgi(); return; }
   ctx.drawImage(bg,0,0);
@@ -1166,12 +1191,12 @@ function animPorts(){
 }
 document.querySelectorAll('.pick').forEach(b=>{
   const P=addPort(b.querySelector('canvas'),b.dataset.dog,()=>DOGS[b.dataset.dog].spr);
-  b.addEventListener('click',()=>{ chosen=b.dataset.dog; dog.D=DOGS[chosen]; if(MODE==='side') resetSide(); syncPicks(); updateSub(); speak(DOGS[chosen].call,{}); P.state='hop'; P.t=50; });
+  b.addEventListener('click',()=>{ chosen=b.dataset.dog; dog.D=DOGS[chosen]; if(MODE==='side') resetSide(); if(MODE==='farm') farmSwapDog(); syncPicks(); updateSub(); speak(DOGS[chosen].call,{}); P.state='hop'; P.t=50; });
 });
 const pupPort=addPort(document.getElementById('pupCv'),'moxy',()=>MOXY.spr);
 document.getElementById('pupBtn').addEventListener('click',()=>{
   pupOn=!pupOn; document.getElementById('pupBtn').setAttribute('aria-pressed',String(pupOn));
-  makePup(); if(MODE==='side') spup=pupOn?mkEnt(MOXY,sdog.x-12):null; updateSub();
+  makePup(); if(MODE==='side') spup=pupOn?mkEnt(MOXY,sdog.x-12):null; if(MODE==='farm') fpup=pupOn?mkF(MOXY,fdog.x-8,fdog.y):null; updateSub();
   if(pupOn){ yip(); pupPort.state='hop'; pupPort.t=60; } else { pupPort.state='lie'; pupPort.t=200; }
 });
 document.querySelectorAll('[data-season]').forEach(b=>b.addEventListener('click',()=>{ seasonChoice=b.dataset.season; syncPicks(); newWorld(); }));
@@ -1179,6 +1204,7 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',(
 const HELP={
   herd:'Bring alle 10 Schafe ins Gatter. Tippen oder Ziehen schickt deinen Collie los, unten sind die Kommandos. Klemmt ein Schaf in der Ecke: am Rand dahinter schleichen oder <b>Wuff!</b>',
   agility:'Lauf die nummerierten Hindernisse der Reihe nach, der blinkende Pfeil zeigt den Eingang. Tippen oder Ziehen lenkt. Vor Sprüngen <b>Hopp!</b>, auf A-Wand, Steg und Wippe <b>Langsam</b>, auf dem Tisch <b>Lie down</b>. Jeder Fehler kostet 5 Sekunden.',
+  farm:'Erkunde den Hof mit dem Steuerkreuz. <b>Hopp!</b> springt, länger halten springt höher. An Kanten krallt sich dein Collie fest: hoch drücken zieht ihn rauf. An Wänden rutscht er, mit <b>Hopp!</b> stößt er sich ab. Runter drücken lässt dich durch Bretter fallen. 12 Leckerlis sind versteckt, jeder Ort hat mindestens zwei Wege.',
   side:'Dein Collie läuft von selbst. <b>Hopp!</b> springt, länger halten springt höher (auch Tippen aufs Bild oder Leertaste). <b>Langsam</b> halten bremst: nötig für Slalom und die gelben Kontaktzonen, sonst fliegt dein Hund drüber. Auf dem Tisch <b>Lie down</b>. Jeder Fehler kostet 5 Sekunden.'
 };
 function syncPicks(){
@@ -1186,12 +1212,13 @@ function syncPicks(){
   document.querySelectorAll('[data-season]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.season===seasonChoice)));
   document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===MODE)));
   const D=DOGS[chosen];
-  document.getElementById('traits').textContent=MODE==='agility'?D.traits.split('.')[0]+'. '+D.agi:MODE==='side'?D.traits.split('.')[0]+'. '+D.sd.txt:D.traits;
+  document.getElementById('traits').textContent=MODE==='agility'?D.traits.split('.')[0]+'. '+D.agi:MODE==='side'?D.traits.split('.')[0]+'. '+D.sd.txt:MODE==='farm'?D.traits.split('.')[0]+'. '+D.fm.txt:D.traits;
   document.getElementById('help').innerHTML=HELP[MODE];
-  const agi=MODE==='agility', side=MODE==='side';
-  document.getElementById('padAgi').hidden=!agi; document.getElementById('padHerd').hidden=agi||side; document.getElementById('padSide').hidden=!side;
-  document.getElementById('calmStat').hidden=agi||side; document.getElementById('faults').hidden=!(agi||side);
-  document.getElementById('field').hidden=side; document.getElementById('side').hidden=!side; if(side) fitSide();
+  const agi=MODE==='agility', side=MODE==='side', farm=MODE==='farm', herd=MODE==='herd';
+  document.getElementById('padAgi').hidden=!agi; document.getElementById('padHerd').hidden=!herd; document.getElementById('padSide').hidden=!side; document.getElementById('padFarm').hidden=!farm;
+  document.getElementById('calmStat').hidden=!herd; document.getElementById('faults').hidden=!(agi||side); document.getElementById('time').hidden=farm;
+  document.getElementById('field').hidden=side||farm; document.getElementById('side').hidden=!side; document.getElementById('farm').hidden=!farm;
+  if(side) fitSide(); if(farm) fitFarm();
   document.getElementById('field').setAttribute('aria-label',agi?'Agility-Parcours mit Collie':'Weide mit Schafen, Collie und Gatter');
 }
 
@@ -1201,6 +1228,7 @@ function start(fresh){
   audio(); intro.hidden=true; winCard.hidden=true;
   if(fresh) newWorld();
   state='play';
+  if(MODE==='farm'){ whistle(); setTimeout(()=>say('go'),350); return; }
   if(MODE==='side'){ resetSide(); sdog.ready=45; whistle(); setTimeout(()=>say('go'),350); return; }
   if(MODE==='agility'){ resetRun(); whistle(); setTimeout(()=>say('go'),350); return; }
   hud(0,1);
@@ -1208,7 +1236,7 @@ function start(fresh){
   dog.mode='circle'; dog.dir=1; setActive('comebye');
 }
 document.getElementById('start').addEventListener('click',()=>start(false));
-document.getElementById('again').addEventListener('click',()=>start(true));
+document.getElementById('again').addEventListener('click',()=>{ if(MODE==='farm'){ winCard.hidden=true; state='play'; return; } start(true); });
 document.getElementById('change').addEventListener('click',()=>{ state='intro'; winCard.hidden=true; newWorld(); intro.hidden=false; });
 function win(){
   state='win'; dog.mode='down'; dog.zoom=0; setActive('down');
@@ -1620,6 +1648,393 @@ addEventListener('keydown',e=>{
   else if((k==='p'||k==='Enter')&&!e.repeat){ e.preventDefault(); sidePlatz(); }
 });
 addEventListener('keyup',e=>{ const k=e.key; if(k===' '||k==='ArrowUp'||k==='w') releaseJump(); if(k==='ArrowDown'||k==='s'||k==='Shift') slowHeld=false; });
+
+const FARM={W:120,H:44,G:27,rows:["........................................................................................................................", "........................................................................................................................", "........................................................................................................................", "........................................................................................................................", "........................................................................................................................", "........................................................................................................................", "........................................................................................................................", "........................................................................................................................", ".........................................RRRRR..RRRRRR..................................................................", "........................................RRRRRR..RRRRRRR.................................................................", ".......................................RRRRRRR..RRRRRRRR................................................................", "......................................RRRRRRRR..RRRRRRRRR...............................................................", ".............SS......................RRRRRRRRR..RRRRRRRRRR..............................................................", ".............SS.....................RRRRRRRRRR..RRRRRRRRRRR....--.......................................................", ".......RRRRRRRRR...................RRRRRRRRRRR..RRRRRRRRRRRR............................................................", "......RRRRRRRRRRR...................W.....................W.---.........................................................", ".....RRRRRRRRRRRRR..............HH..W.....................W.............................................................", "....RRRRRRRRRRRRRRR.............HH..W.....==========......W.---.....................................................rr..", "...RRRRRRRRRRRRRRRRR............HH..W.....................W.........................................................rr..", "...B..............B.---.........HH..W..HH.............HH.......---.................................................#####", "...B..............B.............HH..W..HH.............HH........................................................#..#####", "...B.................----.======HH..W===========...=======W===-................................................##..#####", "...B............................HH..W.....................W..........RRRRRRRR............................########..#####", "...B==============B======...==..HH..W.........HH................---...W....W..x.........................#....####..#####", "...B..............B.............HH..W.........HH......................W....W..x........................##....####..#####", "xx.B..........==.......xx..S..HHHH..W.......HHHH.............---.........==..xx..................fffff#......####..#####", "xx.B...................xx..S..HHHH..W.......HHHH.............................xx....==..rr............##......####..#####", "###B##..##########B########S..S##################################################~~~~~~rr~~~~~~##########....####..#####", "###B..............B########S..S##################################################~~~~~~rr~~~~~~##########SS..####..#####", "###B.BBBB.........B########S..S##################################################~~~~~~rr~~~~~~##########............###", "###B.BBBBB........B########S..S#############################.....................~~~~~~rr~~~~~~##########..SS........###", "###B.BBBBBB.......B########S..S#############################...............S.....~~~~~~rr~~~~~~##########....###########", "###B.BBBBBBB......B########S..S#############################........SSS....S.....########################SS..###########", "###B.BBBBBBBB...==B#####...S..S......#######################...............S.....###############.............###########", "###B.BBBBBBBBB....B#####...S..S......#######################....SSS........S.....#.........................SS###########", "###B.BBBBBBBBBB.oo.........S..S............................................S.....#...........................###########", "###B.BBBBBBBBBBBoo.........S..S.....................................SSS....S....................########################", "###BBBBBBBBBBBBBBBB#####..........SS............................................................########################", "########################..~~~~~~~~...########################...SSS..............#....~~~~~~~~~~~#######################", "########################S.~~~~~~~~..S########################....................#....~~~~~~~~~~~#######################", "#############################################################S..................S#S...~~~~~~~~~~~#######################", "########################################################################################################################", "########################################################################################################################", "########################################################################################################################"],treats:[[13.5, 11], [4.5, 22], [16.5, 32], [28.5, 20], [35, 36], [55, 18], [52, 7], [64, 12], [73.5, 24], [87.5, 25], [69, 31], [116.5, 16]],regions:[["house", 4, 19, 17, 26], ["cellar", 4, 28, 17, 36], ["barn", 37, 15, 57, 26], ["barn", 46, 8, 47, 14], ["barn", 71, 23, 74, 26], ["cave", 103, 23, 108, 26], ["cave", 113, 19, 114, 28]],start:[24,27]}
+/* ---------- Farm: open world with direct control ---------- */
+const sstep=(a,b,x)=>{ const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
+const FW=170, TS=8, FG=0.12;
+let FH=150;
+const fcv=document.getElementById('farm'), fctx=fcv.getContext('2d');
+let FS=3, FT=null, FREG=null, fdog=null, fpup=null, fcamX=0, fcamY=0, flook=0, ffx=[], famb=[], mapCv=null, waterCv=null, fFar=null, fMid=null, FPAL=null;
+let treats=[], chickens=[], fsheep=[], fPlayFrames=0, wallJumps=0;
+const DP={x:0,up:false,down:false}, KS={l:false,r:false,u:false,d:false};
+let fJumpHeld=false, fJumpTap=false;
+const FSOL=new Set(['#','S','B','W','R','H','x','o','r','I','X']), FONE=new Set(['=','-','f']);
+DOGS.nala.fm={spd:1.0,acc:.12,fric:.22,jump:1.32,hold:14,slide:.32,wj:1.05,txt:'Auf dem Hof: die beste Kletterin, Walljumps gelingen ihr am leichtesten.'};
+DOGS.juni.fm={spd:.85,acc:.1,fric:.3,jump:1.24,hold:12,slide:.2,wj:.95,txt:'Auf dem Hof: rutscht an Wänden kaum ab, springt aber etwas weniger hoch.'};
+DOGS.fly.fm={spd:1.15,acc:.12,fric:.12,jump:1.38,hold:13,slide:.5,wj:1.1,txt:'Auf dem Hof: springt am weitesten und schafft sogar höhere Kanten, rutscht aber schnell ab.'};
+MOXY.fm={spd:1.15,acc:.12,fric:.2,jump:1.3,hold:8,slide:.5,wj:.9};
+
+function fitFarm(){
+  const r=stage.getBoundingClientRect();
+  const kw=Math.max(1,(r.width-12)/FW);
+  const fh=Math.round(clamp((r.height-14)/kw,110,FW*1.3));
+  const k=Math.max(1,Math.min(kw,(r.height-14)/fh));
+  FH=fh;
+  const dpr=window.devicePixelRatio||1, s=Math.max(2,Math.min(8,Math.round(k*dpr)));
+  if(s!==FS||fcv.width!==FW*s||fcv.height!==FH*s){ FS=s; fcv.width=FW*FS; fcv.height=FH*FS; }
+  fctx.imageSmoothingEnabled=false;
+  fcv.style.width=Math.floor(FW*k)+'px'; fcv.style.height=Math.floor(FH*k)+'px';
+}
+addEventListener('resize',()=>{ if(MODE==='farm') fitFarm(); });
+
+const ft=(tx,ty)=>(tx<0||tx>=FARM.W||ty>=FARM.H)?'X':ty<0?'.':FT[ty][tx];
+const ftp=(x,y)=>ft(Math.floor(x/TS),Math.floor(y/TS));
+const fsolid=(x,y)=>FSOL.has(ftp(x,y));
+const freg=(tx,ty)=>(tx<0||ty<0||tx>=FARM.W||ty>=FARM.H)?'cave':FREG[ty][tx];
+
+/* --- world texture --- */
+function seasonKey(){ return Object.keys(SEASONS).find(k=>SEASONS[k]===SEASON); }
+function buildFarm(){
+  FPAL=SIDE_PAL[seasonKey()];
+  FT=FARM.rows.map(r=>r.split(''));
+  if(SEASON.ice) for(let x=0;x<FARM.W;x++) if(FT[FARM.G][x]==='~') FT[FARM.G][x]='I';
+  FREG=[]; for(let y=0;y<FARM.H;y++){ FREG.push([]); for(let x=0;x<FARM.W;x++) FREG[y].push(y>=FARM.G?'cave':'sky'); }
+  FARM.regions.forEach(([t,x0,y0,x1,y1])=>{ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) FREG[y][x]=t; });
+  const PW=FARM.W*TS, PH=FARM.H*TS;
+  mapCv=document.createElement('canvas'); mapCv.width=PW; mapCv.height=PH;
+  waterCv=document.createElement('canvas'); waterCv.width=PW; waterCv.height=PH;
+  const g=mapCv.getContext('2d'), w=waterCv.getContext('2d');
+  const P=(x,y,a,b,c)=>{ g.fillStyle=c; g.fillRect(x,y,a,b); };
+  const BG={cave:['#3b2f27','#33281f','#45372d'],cellar:['#5a4636','#4c3a2c','#64503e'],house:['#ead9b5','#e0cba3','#f2e4c6'],barn:['#6e3d2e','#5c3226','#7a4636']};
+  // background regions
+  for(let ty=0;ty<FARM.H;ty++) for(let tx=0;tx<FARM.W;tx++){
+    const c=FT[ty][tx], r=FREG[ty][tx]; if(FSOL.has(c)||r==='sky') continue;
+    const [b0,b1,b2]=BG[r], px=tx*TS, py=ty*TS; P(px,py,8,8,b0);
+    if(r==='house'){ P(px+1,py,1,8,b1); P(px+5,py,1,8,b1); if(ty===26) P(px,py+5,8,3,'#c9a77a'); }
+    else if(r==='barn'){ P(px+3,py,1,8,b1); P(px+7,py,1,8,b1); }
+    else if(r==='cellar'){ P(px,py+3,8,1,b1); P(px+(ty%2?2:6),py,1,3,b1); }
+    else { for(let i=0;i<3;i++) P(px+((rnd()*8)|0),py+((rnd()*8)|0),1,1,rnd()<.5?b1:b2); }
+  }
+  // decor: windows, pictures, cave crystals, lanterns
+  const win=(tx,ty)=>{ P(tx*8,ty*8,16,16,'#8a6340'); P(tx*8+1,ty*8+1,14,14,FPAL.sky[0]); P(tx*8+7,ty*8+1,2,14,'#8a6340'); P(tx*8+1,ty*8+7,14,2,'#8a6340'); };
+  win(6,20); win(10,24);
+  P(14*8+2,20*8+2,9,7,'#8a6340'); P(14*8+3,20*8+3,7,5,'#e98fa3'); P(14*8+5,20*8+5,3,2,'#f2c14e');
+  [[8,30],[13,29],[40,24],[52,24],[72,24]].forEach(([tx,ty])=>{ P(tx*8+3,ty*8,1,3,'#3a2a1f'); P(tx*8+2,ty*8+3,3,3,'#f2c14e'); P(tx*8+3,ty*8+4,1,1,'#fff3c4'); });
+  for(let ty=FARM.G;ty<FARM.H;ty++) for(let tx=0;tx<FARM.W;tx++){
+    if(FT[ty][tx]!=='.'||FREG[ty][tx]!=='cave') continue;
+    if(FSOL.has(ft(tx,ty+1))&&rnd()<.18){ const cx=tx*8+((rnd()*6)|0)+1, col=pick(['#9fe3f2','#c9b3e8','#b6f0c8']); P(cx,ty*8+5,1,3,col); P(cx+1,ty*8+6,1,2,shade(col,.8)); }
+    if(FSOL.has(ft(tx,ty-1))&&rnd()<.12) P(tx*8+((rnd()*8)|0),ty*8+((rnd()*3)|0),1,1,'#e7f7a8');
+  }
+  // trees: canopy behind everything in front of it
+  const canopy=(cx,cy,rx,ry)=>{ const [mid,dark,hi,line]=SEASON.crown;
+    for(let y=Math.floor(cy-ry);y<=cy+ry;y++) for(let x=Math.floor(cx-rx);x<=cx+rx;x++){
+      const d=Math.hypot((x-cx)/rx,(y-cy)/ry)+(rnd()-.5)*0.12; if(d>1) continue;
+      let col=d>.9?line:(x-cx)+(y-cy)<-rx*0.5?hi:(y-cy)>ry*0.3?dark:mid;
+      if(SEASON.blossom&&d<.9&&rnd()<.12) col=SEASON.blossom;
+      if(SEASON.ambient==='leaf'&&d<.9&&rnd()<.08) col='#c43f2a';
+      if(SEASON.snowcap&&(y-cy)<-ry*0.45&&d<.95) col='#ffffff';
+      P(x,y,1,1,col); } };
+  const trunk=(tx,y0,y1)=>{ P(tx*8+2,y0*8,4,(y1-y0+1)*8,'#6b4a30'); P(tx*8+2,y0*8,1,(y1-y0+1)*8,'#8a6340'); };
+  trunk(22,17,26); canopy(22.5*8,17.5*8,40,30);
+  trunk(63,12,26); canopy(63*8,17*8,46,50);
+  // well posts and a little sign
+  P(26*8+3,22*8,2,24,'#6b4a30'); P(31*8+3,22*8,2,24,'#6b4a30'); P(28*8+7,22*8,1,8,'#d8ccb0');
+  // fg tiles
+  for(let ty=0;ty<FARM.H;ty++) for(let tx=0;tx<FARM.W;tx++){
+    const c=FT[ty][tx], px=tx*8, py=ty*8, ab=ft(tx,ty-1), open=!FSOL.has(ab)&&ab!=='~';
+    switch(c){
+      case '#': { const dep=ty-FARM.G, base=dep<=0?'#8a6a48':mixHex('#8a6a48','#5e4836',Math.min(1,dep/12));
+        P(px,py,8,8,base); for(let i=0;i<4;i++) P(px+((rnd()*8)|0),py+((rnd()*8)|0),1,1,rnd()<.5?shade(base,.85):mixHex(base,'#ffffff',.12));
+        if(open){ if(freg(tx,ty-1)==='sky'){ P(px,py,8,2,SEASON.ice?'#ffffff':SEASON.grass); P(px,py+2,8,1,SEASON.ice?'#dfe8ec':SEASON.tuft[0]);
+            if(!SEASON.ice) for(let i=0;i<2;i++) P(px+((rnd()*7)|0),py-1,1,1,SEASON.tuft[0]); }
+          else P(px,py,8,1,mixHex(base,'#ffffff',.18)); }
+        break; }
+      case 'S': P(px,py,8,8,'#8e8a82'); P(px,py+3,8,1,'#6f6a63'); P(px,py+7,8,1,'#6f6a63'); P(px+(ty%2?2:6),py,1,3,'#6f6a63'); P(px+(ty%2?6:2),py+4,1,3,'#6f6a63');
+        if(open) P(px,py,8,1,SEASON.ice&&freg(tx,ty-1)==='sky'?'#ffffff':'#aaa59c'); break;
+      case 'B': P(px,py,8,8,'#b5654a'); P(px,py+3,8,1,'#8f4a37'); P(px,py+7,8,1,'#8f4a37'); P(px+(ty%2?1:5),py,1,3,'#8f4a37'); P(px+(ty%2?5:1),py+4,1,3,'#8f4a37'); break;
+      case 'W': P(px,py,8,8,'#a8463a'); P(px+3,py,1,8,'#8a3a30'); P(px+7,py,1,8,'#8a3a30'); P(px,py,1,8,'#bf5a4a'); break;
+      case 'R': P(px,py,8,8,'#6e3b30'); P(px,py+3,8,1,'#5a2f26'); P(px,py+7,8,1,'#5a2f26'); P(px+(tx%2?1:5),py,1,3,'#8a4c3e');
+        if(open) P(px,py,8,SEASON.ice?2:1,SEASON.ice?'#ffffff':'#8a4c3e'); break;
+      case 'H': P(px,py,8,8,'#d9b15a'); P(px+1,py+2,3,1,'#c49a3e'); P(px+4,py+5,3,1,'#c49a3e'); P(px+2,py,1,8,'#a07c34'); P(px+6,py,1,8,'#a07c34');
+        if(open) P(px,py,8,1,SEASON.ice?'#ffffff':'#f0d27f'); break;
+      case 'x': P(px,py,8,8,'#7a5536'); P(px+1,py+1,6,6,'#b07f52'); for(let i=1;i<7;i++) P(px+i,py+i,1,1,'#8a6340'); break;
+      case 'o': P(px+1,py,6,8,'#8a5a36'); P(px,py+1,8,6,'#8a5a36'); P(px,py+1,8,1,'#4a3a2e'); P(px,py+6,8,1,'#4a3a2e'); P(px+2,py,1,8,'#a87048'); break;
+      case 'r': P(px,py+1,8,7,'#8e8a82'); P(px+1,py,6,1,'#8e8a82'); P(px+1,py+1,3,2,'#b5b0a6'); P(px,py+7,8,1,'#6f6a63'); if(open&&SEASON.ice) P(px+1,py,6,2,'#ffffff'); break;
+      case 'I': P(px,py,8,8,'#cfe6ef'); P(px,py,8,1,'#ffffff'); P(px+((tx*3)%6),py+3,3,1,'#ffffff'); break;
+      case '=': P(px,py,8,1,'#d6a676'); P(px,py+1,8,1,'#a0714a'); if(tx%3===0) P(px+3,py+2,1,2,'#8a6340'); if(SEASON.ice&&freg(tx,ty-1)==='sky') P(px,py-1,8,1,'#ffffff'); break;
+      case '-': P(px,py,8,2,'#6b4a30'); P(px,py,8,1,'#8a6340'); break;
+      case 'f': P(px,py,8,1,'#efe4c6'); P(px,py+1,8,1,'#c9b896'); P(px,py+5,8,1,'#c9b896'); if(tx%2===0) P(px+3,py,2,16,'#b9ab8c'); break;
+      case '~': w.fillStyle=ft(tx,ty-1)==='~'?'#2f7a9c':'#3f8fb0'; w.fillRect(px,py,8,8); if(ft(tx,ty-1)!=='~'){ w.fillStyle='#bfe8f2'; w.fillRect(px,py,8,1); } break;
+    }
+  }
+  // parallax hills
+  fFar=document.createElement('canvas'); fFar.width=256; fFar.height=70; let h=fFar.getContext('2d'); const TAU=Math.PI*2;
+  for(let x=0;x<256;x++){ const y=Math.round(28+7*Math.sin(TAU*x/256*2+0.7)+4*Math.sin(TAU*x/256*5)); h.fillStyle=FPAL.hill; h.fillRect(x,y,1,70-y); if(SEASON.ice){ h.fillStyle='#ffffff'; h.fillRect(x,y,1,2); } }
+  fMid=document.createElement('canvas'); fMid.width=256; fMid.height=70; h=fMid.getContext('2d');
+  for(let x=0;x<256;x++){ const y=Math.round(48+3*Math.sin(TAU*x/256*3+1.3)+2*Math.sin(TAU*x/256*7)); h.fillStyle=FPAL.hill2; h.fillRect(x,y,1,70-y); }
+  const trs=[makeTree(SEASON),makeTree(SEASON)];
+  for(let i=0;i<8;i++){ const x=((i*32+rnd()*18)|0)%256; h.drawImage(trs[i%2],x,30+((rnd()*6)|0)); if(x>241) h.drawImage(trs[i%2],x-256,33); }
+  // things to find and things that live here
+  treats=FARM.treats.map(([x,y],i)=>({x:x*8+4,y:y*8+5,got:false,i}));
+  chickens=[]; [[62,26],[66,26],[72,26],[76,26],[68,26]].forEach(([x,y])=>chickens.push(mkCritter(x*8+4,y*8+8,2.5,5,'chick')));
+  fsheep=[]; [[97,26],[99,26],[102,26]].forEach(([x,y],i)=>fsheep.push(mkCritter(x*8+4,y*8+8,4,6,'sheep')));
+}
+function mkCritter(x,y,hw,h,kind){ return {x,y,vx:0,vy:0,gr:false,hw,h,face:rnd()<.5?1:-1,t:(rnd()*100)|0,kind,peck:0,scare:0,anim:0}; }
+
+/* --- collision --- */
+function fMoveX(e,dx){
+  e.x+=dx; if(!dx) return;
+  const edge=dx>0?e.x+e.hw:e.x-e.hw, ys=[e.y-e.h+0.6,e.y-0.6];
+  for(const yy of ys) if(fsolid(edge,yy)){ const tx=Math.floor(edge/TS); e.x=dx>0?tx*TS-e.hw-0.001:(tx+1)*TS+e.hw+0.001; e.vx=0; return; }
+}
+function fMoveY(e,dy){
+  const old=e.y; e.y+=dy; e.gr=false;
+  const xs=[e.x-e.hw+0.6,e.x+e.hw-0.6];
+  if(dy>0){ for(const xx of xs){ const tx=Math.floor(xx/TS), ty=Math.floor(e.y/TS), c=ft(tx,ty), top=ty*TS;
+      if(FSOL.has(c)||(FONE.has(c)&&old<=top+0.01&&!(e.drop>0))){ e.y=top; e.vy=0; e.gr=true; return; } } }
+  else if(dy<0){ for(const xx of xs) if(fsolid(xx,e.y-e.h)){ const ty=Math.floor((e.y-e.h)/TS); e.y=(ty+1)*TS+e.h; e.vy=0; return; } }
+}
+const onOneWay=e=>{ const a=ftp(e.x-e.hw+0.6,e.y+0.5), b=ftp(e.x+e.hw-0.6,e.y+0.5); return !FSOL.has(a)&&!FSOL.has(b)&&(FONE.has(a)||FONE.has(b)); };
+function wallSide(e){ const my=e.y-e.h*0.5; if(fsolid(e.x+e.hw+0.8,my)) return 1; if(fsolid(e.x-e.hw-0.8,my)) return -1; return 0; }
+function tryGrab(e,gd){
+  const txF=Math.floor((e.x+gd*(e.hw+1.5))/TS), txS=Math.floor(e.x/TS), top=e.y-e.h;
+  for(let ty=Math.floor((top-5)/TS); ty<=Math.floor((top+3)/TS); ty++){
+    const c=ft(txF,ty), lt=ty*TS; if(lt<top-5||lt>top+3) continue;
+    if(!(FSOL.has(c)||FONE.has(c))) continue;
+    if(FSOL.has(ft(txF,ty-1))||FSOL.has(ft(txS,ty-1))||FONE.has(ft(txF,ty-1))) continue;
+    e.st='hang'; e.ledge=lt; e.ltx=txF; e.hangT=0; e.vx=0; e.vy=0; e.face=gd;
+    e.x=FSOL.has(c)?(gd>0?txF*TS-e.hw-0.01:(txF+1)*TS+e.hw+0.01):(gd>0?txF*TS-e.hw+2:(txF+1)*TS+e.hw-2);
+    e.y=lt+e.h-1; return true;
+  }
+  return false;
+}
+function fSurface(e){ let ty=Math.floor((e.y-0.5)/TS); while(ty>0&&ft(Math.floor(e.x/TS),ty-1)==='~') ty--; return ty*TS; }
+
+/* --- the dog (and Moxy): run, jump, hang, pull up, wall-slide, wall-jump, swim --- */
+function mkF(src,x,y){ const f=src.spr.run[0];
+  return {x,y,vx:0,vy:0,gr:false,hw:4,h:Math.max(5,f.h),src,P:src.fm,face:1,st:'move',jbuf:0,coy:0,wcoy:0,lastWall:0,wallDir:0,lock:0,noGrab:0,drop:0,holdT:99,
+    slide:false,swim:false,pendShake:false,shake:0,sq:0,anim:0,crouch:false,pt:0,cd:0,stuck:0,lx:x}; }
+function stepF(e,c,isDog){
+  const P=e.P;
+  if(c.jump) e.jbuf=8;
+  for(const k of ['lock','noGrab','drop','wcoy','cd']) if(e[k]>0) e[k]--;
+  if(e.shake>0){ e.shake--; e.vx*=0.5; if(e.shake%3===0) fspray(e.x+(rnd()-.5)*8,e.y-e.h+1,2,['#d8f1f6','#9fd3e2']); fMoveX(e,e.vx); e.vy+=FG; fMoveY(e,e.vy); return; }
+  if(e.st==='hang'){
+    e.hangT++;
+    if(e.jbuf>0||c.up||(c.dir===e.face&&e.hangT>8)){ e.st='pull'; e.pt=0; e.jbuf=0; e.p0x=e.x; e.p0y=e.y;
+      e.p1x=e.face>0?e.ltx*TS+e.hw+0.5:(e.ltx+1)*TS-e.hw-0.5; e.p1y=e.ledge; }
+    else if(c.down||c.dir===-e.face){ e.st='move'; e.noGrab=14; e.vy=0.3; }
+    return;
+  }
+  if(e.st==='pull'){
+    e.pt=Math.min(1,e.pt+1/12); const t=sstep(0,1,e.pt);
+    e.y=e.p0y+(e.p1y-e.p0y)*Math.min(1,t*1.6); e.x=e.p0x+(e.p1x-e.p0x)*Math.max(0,(t-0.3)/0.7);
+    if(e.pt>=1){ e.st='move'; e.gr=true; e.vx=0; e.vy=0; }
+    return;
+  }
+  const inW=ftp(e.x,e.y-1)==='~';
+  if(inW&&!e.swim){ e.swim=true; e.vy*=0.3; if(isDog||rnd()<.5) splash(); fspray(e.x,e.y-2,8,['#d8f1f6','#9fd3e2']); }
+  if(!inW&&e.swim){ e.swim=false; e.pendShake=true; }
+  if(e.swim){
+    e.vx+=(c.dir*0.55-e.vx)*0.08; if(c.dir) e.face=c.dir;
+    const surf=fSurface(e), target=surf+e.h*0.7+(c.down?10:0);
+    e.vy+=(target-e.y)*0.02; if(c.up) e.vy-=0.03; e.vy*=0.86;
+    if(e.jbuf>0&&e.y<surf+e.h+2){ e.vy=-P.jump*1.05; e.jbuf=0; e.holdT=0; whoosh(); }
+    fMoveX(e,e.vx); fMoveY(e,e.vy); e.anim+=0.12; e.slide=false; e.crouch=false; return;
+  }
+  const below=ftp(e.x,e.y+0.5), onIce=e.gr&&below==='I';
+  e.crouch=false;
+  if(c.down&&e.gr){ if(onOneWay(e)){ e.drop=12; e.gr=false; e.y+=1; } else e.crouch=true; }
+  const target=e.crouch?0:c.dir*P.spd;
+  if(e.gr) e.vx+=(target-e.vx)*(c.dir&&!e.crouch?(onIce?0.03:P.acc):(onIce?0.015:P.fric));
+  else e.vx+=(target-e.vx)*(e.lock>0?0.012:c.dir?0.07:0.02);
+  if(c.dir&&(e.gr||e.lock===0)) e.face=c.dir;
+  if(e.jbuf>0){
+    if(e.gr||e.coy>0){ e.vy=-P.jump; e.gr=false; e.coy=0; e.holdT=0; e.jbuf=0; e.sq=-0.15; fdust(e.x,e.y,2); if(isDog) whoosh(); }
+    else if(e.wallDir||e.wcoy>0){ const wd=e.wallDir||e.lastWall; e.vx=-wd*P.wj; e.vy=-P.jump*0.95; e.lock=10; e.holdT=0; e.face=-wd; e.wcoy=0; e.jbuf=0;
+      fdust(e.x+wd*e.hw,e.y-e.h*0.5,3); if(isDog){ wallJumps++; whoosh(); } }
+  }
+  let gg=FG; if(!c.held) e.holdT=99;
+  if(e.vy<0&&c.held&&e.holdT<P.hold){ gg*=0.45; e.holdT++; } else if(Math.abs(e.vy)<0.22) gg*=0.6; else if(e.vy>0) gg*=1.15;
+  e.vy=Math.min(2.6,e.vy+gg);
+  e.slide=false;
+  if(!e.gr&&e.wallDir&&c.dir===e.wallDir&&e.vy>0){ e.vy=Math.min(e.vy,P.slide); e.slide=true; e.face=e.wallDir; if(frames%6===0) fdust(e.x+e.wallDir*e.hw,e.y-2,1); }
+  const wasGr=e.gr, vy0=e.vy;
+  fMoveX(e,e.vx); fMoveY(e,e.vy);
+  e.wallDir=e.gr?0:wallSide(e);
+  if(e.wallDir){ e.wcoy=6; e.lastWall=e.wallDir; }
+  if(wasGr&&!e.gr&&e.vy>=0) e.coy=6; else if(e.gr) e.coy=0; else if(e.coy>0) e.coy--;
+  if(!wasGr&&e.gr){ e.sq=Math.min(0.25,vy0*0.12); if(vy0>0.9) fdust(e.x,e.y,vy0>1.6?4:2); if(isDog&&vy0>1.9) thud();
+    if(e.pendShake){ e.pendShake=false; e.shake=24; brrr(isDog?1:1.5); } }
+  if(!e.gr&&e.noGrab===0&&e.vy>-0.5&&c.dir) tryGrab(e,c.dir);
+  e.anim+=Math.abs(e.vx)*0.35; e.sq*=0.8;
+}
+function pupCtl(p){
+  const d=fdog, dx=d.x-d.face*10-p.x, dy=d.y-p.y, dist=Math.hypot(d.x-p.x,d.y-p.y);
+  const c={dir:Math.abs(dx)>6?Math.sign(dx):0,up:false,down:false,jump:false,held:true};
+  if(p.st==='hang') c.up=true;
+  if(p.swim) c.up=dy<0;
+  if(p.cd===0&&(p.gr||p.swim)&&((c.dir&&p.wallDir===c.dir)||(dy<-10&&Math.abs(dx)<26)||(p.swim&&dy<-4))){ c.jump=true; p.cd=24; }
+  if(!p.gr&&p.wallDir&&dy<-8&&p.cd===0){ c.jump=true; p.cd=10; }
+  if(p.gr&&dy>12&&Math.abs(dx)<10&&onOneWay(p)) c.down=true;
+  if(dist>30&&Math.abs(p.x-p.lx)<0.15) p.stuck++; else p.stuck=0; p.lx=p.x;
+  if(dist>120||p.stuck>200){ const off=Math.abs(p.x-fcamX-FW/2)>FW/2+10||Math.abs(p.y-fcamY-FH/2)>FH/2+10;
+    if(off||p.stuck>200){ Object.assign(p,{x:d.x-d.face*8,y:d.y,vx:0,vy:0,st:'move',swim:false,stuck:0}); fdust(p.x,p.y,5); yip(); } }
+  return c;
+}
+function stepCritter(e){
+  const d=fdog, dist=Math.abs(e.x-d.x)+Math.abs(e.y-d.y)*2;
+  if(e.scare>0) e.scare--;
+  const near=e.kind==='chick'?22:28;
+  if(dist<near&&!(d.crouch)) e.scare=Math.max(e.scare,40);
+  if(e.scare>0){ e.vx+=(Math.sign(e.x-d.x||1)*(e.kind==='chick'?0.9:0.8)-e.vx)*0.2; if(e.kind==='chick'&&e.gr&&rnd()<.06) e.vy=-1.1; e.peck=0; }
+  else { if(--e.t<=0){ e.t=60+((rnd()*140)|0); const r=rnd(); if(r<.4){ e.vx=0; e.peck=e.kind==='chick'?50:70; } else { e.face=rnd()<.5?1:-1; e.vx=e.face*(e.kind==='chick'?0.3:0.2); } }
+    e.vx*=0.98; if(e.peck>0) e.peck--; }
+  const ahead=ftp(e.x+Math.sign(e.vx)*(e.hw+3),e.y+2);
+  if(e.gr&&(ahead==='~'||ahead==='I'||ahead==='.')&&e.scare===0){ e.vx=-e.vx; }
+  if(e.kind==='sheep'&&(e.x<96*8&&e.vx<0)) e.vx=Math.abs(e.vx);
+  if(Math.abs(e.vx)>0.03) e.face=Math.sign(e.vx);
+  const ovx=e.vx; fMoveX(e,e.vx); if(e.vx===0&&ovx!==0){ if(e.gr&&e.scare>0) e.vy=-1.2; else e.vx=-ovx; }
+  e.vy=Math.min(2.5,e.vy+FG); fMoveY(e,e.vy);
+  e.anim+=Math.abs(e.vx)*0.4;
+}
+function fdust(x,y,n){ for(let i=0;i<n;i++) ffx.push({x:x+(rnd()-.5)*4,y:y-0.5,vx:(rnd()-.5)*0.5,vy:-rnd()*0.35,g:0.02,life:14+rnd()*8,c:SEASON.ice?'#ffffff':pick(['#d8c9a6','#c9b88f'])}); }
+function fspray(x,y,n,cols){ for(let i=0;i<n;i++) ffx.push({x,y,vx:(rnd()-.5)*1.1,vy:-rnd()*0.9,g:0.05,life:20+rnd()*10,c:pick(cols)}); }
+
+/* --- run state --- */
+function resetFarm(){
+  if(!FT) return;
+  const [sx,sy]=FARM.start;
+  fdog=mkF(DOGS[chosen],sx*TS+4,sy*TS); fdog.D=DOGS[chosen]; dog=fdog;
+  fpup=pupOn?mkF(MOXY,fdog.x-10,fdog.y):null;
+  fcamX=clamp(fdog.x-FW/2,0,FARM.W*TS-FW); fcamY=clamp(fdog.y-FH*0.6,0,FARM.H*TS-FH);
+  ffx=[]; famb=[]; fPlayFrames=0; wallJumps=0; hudFarm();
+}
+function farmSwapDog(){ if(!fdog) return; const o=fdog; fdog=mkF(DOGS[chosen],o.x,o.y); fdog.D=DOGS[chosen]; fdog.face=o.face; dog=fdog; }
+function hudFarm(){ document.getElementById('count').textContent='Leckerli '+treats.filter(t=>t.got).length+'/'+treats.length; }
+function farmBark(){
+  if(MODE!=='farm'||state!=='play') return; audio();
+  const now=performance.now(); if(now-lastWuff<700) return; lastWuff=now;
+  bark(); bubble('Wuff!',fdog.D.name);
+  let sheepNear=false;
+  chickens.forEach(c=>{ if(Math.abs(c.x-fdog.x)<60&&Math.abs(c.y-fdog.y)<40) c.scare=70; });
+  fsheep.forEach(s=>{ if(Math.abs(s.x-fdog.x)<70&&Math.abs(s.y-fdog.y)<40){ s.scare=60; sheepNear=true; } });
+  if(sheepNear) setTimeout(()=>bleat({x:LW/2,stubborn:false}),250);
+}
+function finishFarm(){
+  state='win';
+  document.getElementById('winTitle').textContent='Alle gefunden!';
+  document.getElementById('winText').textContent=fdog.D.name+' hat alle '+treats.length+' Leckerlis auf dem Hof aufgespürt.';
+  document.getElementById('rL1').textContent='Zeit'; document.getElementById('rV1').textContent=fmt(fPlayFrames);
+  document.getElementById('rL2').textContent='Walljumps'; document.getElementById('rV2').textContent=String(wallJumps);
+  document.getElementById('r3').hidden=true;
+  document.getElementById('again').textContent='Weiter stromern';
+  document.getElementById('stars').innerHTML='★★★';
+  setTimeout(()=>say('super'),300); setTimeout(bark,1300); if(pupOn) setTimeout(yip,1700);
+  const cols=['#f2c14e','#e98fa3','#ffffff','#c9b3e8','#f5e6a8'];
+  for(let i=0;i<90;i++) ffx.push({x:fcamX+rnd()*FW,y:fcamY-rnd()*40,vx:(rnd()-.5)*.4,vy:rnd()*.5,c:cols[i%5],life:300+rnd()*120,g:.01});
+  setTimeout(()=>{ winCard.hidden=false; },1300);
+}
+function stepFarm(){
+  frames++;
+  const d=fdog; if(!d) return;
+  const play=state==='play';
+  const dir=play?(DP.x||((KS.r?1:0)-(KS.l?1:0))):0;
+  const c={dir,up:play&&(DP.up||KS.u),down:play&&(DP.down||KS.d),jump:play&&fJumpTap,held:fJumpHeld};
+  fJumpTap=false;
+  if(play) fPlayFrames++;
+  stepF(d,c,true);
+  if(pupOn&&fpup) stepF(fpup,pupCtl(fpup),false);
+  chickens.forEach(stepCritter); fsheep.forEach(stepCritter);
+  if(play) for(const t of treats){ if(t.got) continue;
+    if(Math.abs(d.x-t.x)<7&&Math.abs(d.y-d.h*0.5-t.y)<8){ t.got=true; chime(); fspray(t.x,t.y,10,['#f2c14e','#ffffff','#fff3c4']);
+      const n=treats.filter(q=>q.got).length; hudFarm(); bubble('Mjam!','Leckerli '+n+'/'+treats.length); if(n===treats.length) finishFarm(); } }
+  flook+=(d.face*18-flook)*0.03;
+  const tx=d.x-FW/2+flook, ty=d.y-FH*0.6;
+  fcamX+=(tx-fcamX)*0.1; fcamY+=(ty-fcamY)*0.1;
+  fcamX=clamp(fcamX,0,FARM.W*TS-FW); fcamY=clamp(fcamY,0,FARM.H*TS-FH);
+  ffx.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.life--; }); ffx=ffx.filter(p=>p.life>0);
+  farmAmbient();
+}
+function farmAmbient(){
+  const k=SEASON.ambient, sky=(x,y)=>freg(Math.floor(x/TS),Math.floor(y/TS))==='sky'&&!fsolid(x,y)&&ftp(x,y)!=='~';
+  if(fcamY<FARM.G*TS){
+    if(k==='snow'&&rnd()<.5) famb.push({x:fcamX+rnd()*(FW+30),y:fcamY-2,vx:-0.1,vy:.2+rnd()*.25,ph:rnd()*6,c:'#ffffff',k});
+    if(k==='leaf'&&rnd()<.06) famb.push({x:fcamX+rnd()*(FW+60),y:fcamY-2,vx:-0.25-rnd()*.25,vy:.25+rnd()*.2,ph:rnd()*6,c:pick(['#d9822e','#a8501f','#efb24c']),k});
+    if(k==='petal'&&rnd()<.05) famb.push({x:fcamX+rnd()*(FW+60),y:fcamY-2,vx:-0.2-rnd()*.2,vy:.2+rnd()*.15,ph:rnd()*6,c:pick(['#f6bfd0','#ffffff']),k});
+    if(k==='butterfly'&&famb.length<4) famb.push({x:fcamX+rnd()*FW,y:FARM.G*TS-12-rnd()*40,vx:0,vy:0,ph:rnd()*6,c:pick(['#fff3a8','#ffffff','#f6bfd0']),k:'fly'});
+  }
+  famb.forEach(p=>{ if(p.k==='fly'){ p.vx+=(rnd()-.5)*.06; p.vy+=(rnd()-.5)*.06; p.vx*=.96; p.vy*=.96; p.x+=p.vx; p.y+=p.vy; if(!sky(p.x,p.y)){ p.vx*=-1; p.vy=-Math.abs(p.vy)-0.1; } }
+    else { p.x+=p.vx+Math.sin(p.ph+frames*.05)*.2; p.y+=p.vy; } });
+  famb=famb.filter(p=>p.k==='fly'?Math.abs(p.x-fcamX-FW/2)<FW:(sky(p.x,p.y)&&p.y<fcamY+FH+4));
+}
+
+/* --- drawing --- */
+function FR(x,y,w,h,c){ const X0=Math.round((x-fcamX)*FS), X1=Math.round((x+w-fcamX)*FS), Y0=Math.round((y-fcamY)*FS), Y1=Math.round((y+h-fcamY)*FS);
+  fctx.fillStyle=c; fctx.fillRect(X0,Y0,Math.max(1,X1-X0),Math.max(1,Y1-Y0)); }
+function FSR(x,y,w,h,c){ fctx.fillStyle=c; fctx.fillRect(Math.round(x*FS),Math.round(y*FS),Math.max(1,Math.round((x+w)*FS)-Math.round(x*FS)),Math.max(1,Math.round((y+h)*FS)-Math.round(y*FS))); }
+const CHICK=[sprite(["...r..","..wwk.","w.wwwy","wwwww.",".www..","..y..."],{w:'#f7f3e6',r:'#d94b4b',k:'#2a1d17',y:'#e0a030'}),
+  sprite(["......","...r..","w.wwk.","wwwwwy",".www..","..y..."],{w:'#f7f3e6',r:'#d94b4b',k:'#2a1d17',y:'#e0a030'})];
+function drawSpriteW(fr,face,x,y,rot,sq){
+  const img=face>0?fr.r:fr.l;
+  fctx.save(); fctx.translate(Math.round((x-fcamX)*FS),Math.round((y-fcamY)*FS)); if(rot) fctx.rotate(rot*face); if(sq) fctx.scale(1+sq*0.5,1-sq);
+  fctx.drawImage(img,Math.round(-fr.w/2)*FS,-fr.h*FS,fr.w*FS,fr.h*FS); fctx.restore();
+}
+function drawFDog(e){
+  const S=e.src.spr; let fr, rot=0;
+  if(e.st==='hang'){ fr=S.run[0]; rot=-1.05; }
+  else if(e.st==='pull'){ fr=S.run[1]; rot=-1.05*(1-e.pt); }
+  else if(e.slide){ fr=S.run[(frames>>3)%2]; rot=-1.3; }
+  else if(e.swim){ fr=S.run[(e.anim|0)%2]; }
+  else if(!e.gr){ fr=S.run[1]; rot=clamp(e.vy*0.22,-0.35,0.4); }
+  else if(e.crouch){ fr=S.down; }
+  else if(Math.abs(e.vx)>0.06){ fr=S.run[(e.anim|0)%2]; }
+  else fr=S.wag[(frames>>3)%2];
+  const j=e.shake>0?((e.shake>>1)%2?1:-1):0;
+  if(e.gr&&!e.swim) FR(e.x-fr.w/2+2,e.y,fr.w-4,1,'rgba(30,30,20,.22)');
+  drawSpriteW(fr,e.face,e.x+j,e.y,rot,e.sq);
+}
+const BONE=["ww...ww",".wwwww.","ww...ww"];
+function drawTreat(t){
+  const bob=Math.round(Math.sin(frames*0.08+t.i)*1.2), x0=Math.round(t.x-3.5), y0=Math.round(t.y-1.5)+bob;
+  for(const [ox,oy] of [[-1,0],[1,0],[0,-1],[0,1]]) BONE.forEach((r,y)=>[...r].forEach((ch,x)=>{ if(ch==='w') FR(x0+x+ox,y0+y+oy,1,1,'#3a2a1f'); }));
+  BONE.forEach((r,y)=>[...r].forEach((ch,x)=>{ if(ch==='w') FR(x0+x,y0+y,1,1,'#fff3dc'); }));
+  if((frames+t.i*17)%50<6) FR(x0+5,y0-2,1,1,'#ffffff');
+}
+function renderFarm(){
+  if(!FT||!fdog) return;
+  const g=fctx; g.imageSmoothingEnabled=false;
+  const [a,b]=FPAL.sky; for(let i=0;i<8;i++) FSR(0,i*FH/8,FW,FH/8+1,mixHex(a,b,i/7));
+  const gy=FARM.G*TS-fcamY, ref=FARM.G*TS-FH*0.6;
+  const lay=(L,f,base)=>{ const tw=L.width; let off=-((fcamX*f)%tw); if(off>0) off-=tw; for(let x=off;x<FW;x+=tw) g.drawImage(L,Math.round(x*FS),Math.round((base-70)*FS),tw*FS,70*FS); };
+  for(let i=0;i<5;i++){ const cx=((i*97-fcamX*0.06)%440+440)%440-40, cy=10+i*7-(fcamY-ref)*0.1; FSR(cx,cy,14,2,'#ffffff'); FSR(cx+3,cy-1,8,1,'#ffffff'); }
+  const farB=gy+(fcamY-ref)*0.6+6, midB=gy+(fcamY-ref)*0.35+3;
+  lay(fFar,0.15,farB); FSR(0,farB,FW,Math.max(0,FH-farB),FPAL.hill);
+  lay(fMid,0.35,midB); FSR(0,midB,FW,Math.max(0,FH-midB),FPAL.hill2);
+  g.drawImage(mapCv,fcamX,fcamY,FW,FH,0,0,FW*FS,FH*FS);
+  treats.forEach(t=>{ if(!t.got&&Math.abs(t.x-fcamX-FW/2)<FW/2+8&&Math.abs(t.y-fcamY-FH/2)<FH/2+8) drawTreat(t); });
+  chickens.forEach(c=>drawSpriteW(CHICK[c.peck>0&&(frames>>3)%2?1:0],c.face,c.x,c.y,0,0));
+  fsheep.forEach(s=>drawSpriteW(sheepSpr[Math.abs(s.vx)>0.05?((s.anim|0)%2):(s.peck>0?2:0)],s.face,s.x,s.y,0,0));
+  if(pupOn&&fpup) drawFDog(fpup);
+  drawFDog(fdog);
+  g.globalAlpha=0.55; g.drawImage(waterCv,fcamX,fcamY,FW,FH,0,0,FW*FS,FH*FS); g.globalAlpha=1;
+  ffx.forEach(p=>FR(p.x,p.y,1,1,p.c));
+  famb.forEach(p=>{ if(p.k==='leaf') FR(p.x,p.y,2,1,p.c);
+    else if(p.k==='fly'){ if((frames+(p.ph*10|0))%12<6) FR(p.x-1,p.y,3,1,p.c); else FR(p.x,p.y,1,1,p.c); FR(p.x,p.y+1,1,1,'#3b302a'); }
+    else FR(p.x,p.y,1,1,p.c); });
+}
+
+/* --- input: d-pad (slide your thumb), jump, bark, keyboard --- */
+const dpad=document.getElementById('dpad');
+function dpadSet(ev){ const r=dpad.getBoundingClientRect(), dx=ev.clientX-(r.left+r.width/2), dy=ev.clientY-(r.top+r.height/2), th=r.width*0.15;
+  DP.x=dx<-th?-1:dx>th?1:0; DP.up=dy<-th*1.1; DP.down=dy>th*1.1; dpadVis(); }
+function dpadVis(){ dpad.querySelector('.u').classList.toggle('on',DP.up); dpad.querySelector('.d').classList.toggle('on',DP.down);
+  dpad.querySelector('.l').classList.toggle('on',DP.x<0); dpad.querySelector('.r').classList.toggle('on',DP.x>0); }
+let dpadId=null;
+dpad.addEventListener('pointerdown',ev=>{ ev.preventDefault(); audio(); dpadId=ev.pointerId; try{dpad.setPointerCapture(ev.pointerId);}catch(_){} dpadSet(ev); });
+dpad.addEventListener('pointermove',ev=>{ if(ev.pointerId===dpadId) dpadSet(ev); });
+['pointerup','pointercancel','lostpointercapture'].forEach(t=>dpad.addEventListener(t,ev=>{ if(ev.pointerId!==dpadId) return; dpadId=null; DP.x=0; DP.up=false; DP.down=false; dpadVis(); }));
+holdBtn(document.getElementById('f-jump'),()=>{ if(MODE!=='farm') return; audio(); fJumpHeld=true; fJumpTap=true; },()=>{ fJumpHeld=false; });
+document.getElementById('f-bark').addEventListener('click',farmBark);
+const FKEYS={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowUp:'u',w:'u',ArrowDown:'d',s:'d'};
+addEventListener('keydown',e=>{
+  if(MODE!=='farm'||state!=='play') return;
+  if(FKEYS[e.key]){ KS[FKEYS[e.key]]=true; e.preventDefault(); }
+  else if((e.key===' '||e.key==='k'||e.key==='z')&&!e.repeat){ e.preventDefault(); fJumpHeld=true; fJumpTap=true; }
+  else if((e.key==='x'||e.key==='b'||e.key==='j')&&!e.repeat){ e.preventDefault(); farmBark(); }
+});
+addEventListener('keyup',e=>{ if(FKEYS[e.key]) KS[FKEYS[e.key]]=false; if(e.key===' '||e.key==='k'||e.key==='z') fJumpHeld=false; });
 
 /* ---------- Loop ---------- */
 syncPicks(); newWorld();

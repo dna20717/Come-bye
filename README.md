@@ -7,6 +7,7 @@ Ein kleines Pixel-Spiel für Handy und Browser rund um Border Collies.
 ## Spielmodi
 - **Hüten:** Treib zehn Schafe ins Gatter. Tippen oder Ziehen lenkt deinen Collie, dazu kommen echte Hütekommandos wie *Come bye*, *Away to me*, *Walk up* und *Lie down*. Wer hetzt, stresst die Herde.
 - **Seitenlauf:** Agility als Sidescroller. Dein Collie läuft von selbst, *Hopp!* springt (länger halten = höher), *Langsam* bremst für Slalom und Kontaktzonen.
+- **Hof:** Eine kleine offene Welt im Seitenprofil mit Haus und Keller, Brunnen, Höhlen, Scheune, Obstgarten, Hühnerstall, Teich und Hügel. Direkte Steuerung mit Steuerkreuz, Kantengriff, Walljump und Schwimmen. 12 Leckerlis sind versteckt, jeder Ort hat mindestens zwei Wege. Die Karte entsteht mit `tools/farm_map.py`.
 - **Agility:** Zufällige Parcours mit Hürde, Reifen, Tunnel, Slalom, A-Wand, Steg, Wippe und Tisch. Mit *Hopp!*, *Langsam* und *Lie down* vermeidest du Fehler, jeder kostet 5 Sekunden.
 
 ## Die Collies
