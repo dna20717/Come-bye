@@ -19,7 +19,7 @@ Ein kleines Pixel-Spiel für Handy und Browser rund um Border Collies.
 
 Optional läuft **Moxy** mit, ein Junghund, der nichts macht, aber niedlich ist: hinterhertrotten, Schmetterlingen nachjagen, um den großen Hund flitzen.
 
-Dazu: vier Jahreszeiten, Zufallskarten, Collies dürfen in den Teich, und eine Schäferin, die ihre Kommandos in Fantasie-Simlish ruft. Alle Sounds entstehen live per Web Audio.
+Dazu: ein Nachtmodus mit Mond, Sternen, Laternen und Glühwürmchen (eine einzige Lichtmaske, multipliziert über das fertige Bild), Hunde, die sich beim Faulenzen auf den Rücken wälzen, vier Jahreszeiten, Zufallskarten, Collies dürfen in den Teich, und eine Schäferin, die ihre Kommandos in Fantasie-Simlish ruft. Alle Sounds entstehen live per Web Audio.
 
 ## Technik
 Eine einzige `index.html` ohne Abhängigkeiten (nur die Schrift „Pixelify Sans“ von Google Fonts).
